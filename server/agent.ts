@@ -20,7 +20,9 @@ function calendarDate(now: Date, offset = 0) {
 
 function addTask(tasks: TaskStore, input: string, now: Date) {
   const prefix = /^(今天|明天|后天|\d{4}-\d{2}-\d{2})\s*/u.exec(input);
-  const title = input.slice(prefix?.[0].length ?? 0).trim();
+  let title = input.slice(prefix?.[0].length ?? 0).trim();
+  // 「明天的会议」 and 「明天要交报告」: the connective belongs to the date, not the title.
+  if (prefix) title = title.replace(/^(?:的(?!士)|需要|要(?![求点闻素]))\s*/u, "");
   if (!title || title.length > 200) return "请给我一个 1 至 200 字的任务标题。";
   let dueDate: string | undefined;
   if (prefix) {
@@ -38,7 +40,17 @@ function taskLine(task: Task) {
   return " · " + task.title + (task.dueDate ? "（" + task.dueDate + " 截止）" : "");
 }
 
-function listTasks(tasks: Task[], filter: "all" | "open" | "done" | "today", today: string) {
+function listTasks(
+  tasks: Task[],
+  filter: Extract<Intent, { action: "list" }>["filter"],
+  today: string,
+) {
+  if (filter === "overdue") {
+    const overdue = tasks.filter((t) => !t.done && t.dueDate && t.dueDate < today);
+    return overdue.length
+      ? ["已逾期（" + overdue.length + "）", ...overdue.map(taskLine)].join("\n")
+      : "没有逾期的待办。";
+  }
   const open = tasks.filter((t) => !t.done && (filter !== "today" || t.dueDate === today));
   if (filter === "today")
     return open.length
@@ -61,6 +73,16 @@ function changeTask(tasks: TaskStore, action: "complete" | "delete", target: str
   let matches = exact.length ? exact : all.filter((t) => t.title.includes(target));
   if (!exact.length && target.startsWith("#"))
     matches = all.filter((t) => t.id === target.slice(1));
+  // 取、拿、领 describe the same errand; try them only when the user's own verb finds nothing.
+  if (action === "complete" && !matches.length && /^[取拿领]./u.test(target)) {
+    const variants = [..."取拿领"].map((verb) => verb + target.slice(1));
+    matches = all.filter((t) => variants.some((variant) => t.title.includes(variant)));
+  }
+  // A finished task that was added again should not compete with its open copy.
+  if (action === "complete" && matches.every((t) => t.title === matches[0].title)) {
+    const open = matches.filter((t) => !t.done);
+    if (open.length) matches = open;
+  }
   if (!matches.length) return "没找到「" + target + "」。可以先说「看看清单」核对标题。";
   if (matches.length > 1) {
     const command = action === "delete" ? "删除" : "完成";
