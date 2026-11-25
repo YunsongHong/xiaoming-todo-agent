@@ -30,6 +30,7 @@ paths:
               required: [title]
               properties:
                 title: { $ref: "#/components/schemas/Title" }
+                dueDate: { type: string, format: date }
       responses:
         "201":
           description: 新建的任务
@@ -56,6 +57,7 @@ paths:
               additionalProperties: false
               properties:
                 title: { $ref: "#/components/schemas/Title" }
+                dueDate: { type: string, format: date }
                 done: { type: boolean }
       responses:
         "200":
@@ -86,6 +88,7 @@ components:
         id: { type: string, format: uuid }
         title: { $ref: "#/components/schemas/Title" }
         done: { type: boolean }
+        dueDate: { type: string, format: date }
     Error:
       type: object
       required: [error]

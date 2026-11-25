@@ -5,8 +5,8 @@
 安装 Node.js 24.12 或更高版本（含 npm）。在终端执行以下命令。
 
 ```sh
-git clone https://github.com/TokeNow/todo-agent.git
-cd todo-agent
+git clone https://github.com/YunsongHong/xiaoming-todo-agent.git
+cd xiaoming-todo-agent
 npm ci
 npm run dev
 ```
@@ -42,7 +42,7 @@ curl -sS http://127.0.0.1:3000/api/chat \
   -d '{"messages":[{"role":"user","content":"你好"}]}'
 ```
 
-初始响应为 `{"reply":"你好，欢迎使用小明智能体"}`。后续请求可在 `messages` 中按顺序传入之前的用户消息和小明的回复，再追加最新的用户消息。
+小明会返回支持的指令。后续请求可在 `messages` 中按顺序传入之前的用户消息和小明的回复，再追加最新的用户消息。
 
 创建一条任务，然后检查列表。
 
@@ -61,7 +61,6 @@ curl -sS http://127.0.0.1:3000/api/tasks
 npm test
 npm run typecheck
 npm run lint
-npm run fmt:check
 npm run build
 ```
 
